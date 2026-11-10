@@ -62,22 +62,45 @@ static const uint8_t MAX_DAYS_MAP[12] = { 31,  28,  31,  30,  31,  30,  31,  31,
  * @param[in] date Exact date
  * @param[in] time Exact time
  */
-static void ShowDateTime(const RTC_DateTypeDef * const date, const RTC_TimeTypeDef * const time)
+static void ShowDateTime(
+    const RTC_DateTypeDef * const date,
+    const RTC_TimeTypeDef * const time)
 {
-  char date_string[MAX_CHARS_IN_A_ROW + 1];
-  char time_string[MAX_CHARS_IN_A_ROW + 1];
+    char date_string[MAX_CHARS_IN_A_ROW + 1];
+    char time_string[MAX_CHARS_IN_A_ROW + 1];
+    char bcd_string[MAX_CHARS_IN_A_ROW + 1];
 
-  snprintf(date_string, sizeof(date_string), "20%02d-%02d-%02d", date->Year, date->Month, date->Date);
-  snprintf(time_string, sizeof(time_string), "%02d:%02d:%02d", time->Hours, time->Minutes, time->Seconds);
+    // RTC Time Register: BCD-kodolt idoregiszter
+    uint32_t tr = RTC->TR;
 
-  OLED_Fill(Black);
-  OLED_SetCursor(0, 0);
-  OLED_WriteString("Exact time", Font_11x18, White);
-  OLED_SetCursor(0, Font_11x18.FontHeight);
-  OLED_WriteString(date_string, Font_11x18, White);
-  OLED_SetCursor(Font_11x18.FontWidth * 2, Font_11x18.FontHeight * 2);
-  OLED_WriteString(time_string, Font_11x18, White);
-  OLED_UpdateScreen();
+    // Normalis datum es ido (BIN formatumban)
+    snprintf(date_string, sizeof(date_string),
+             "20%02d-%02d-%02d",
+             date->Year, date->Month, date->Date);
+
+    snprintf(time_string, sizeof(time_string),
+             "%02d:%02d:%02d",
+             time->Hours, time->Minutes, time->Seconds);
+
+    // A teljes RTC_TR regiszter hexadecimalisan
+    snprintf(bcd_string, sizeof(bcd_string),
+             "TR:%08lX", (unsigned long)tr);
+
+    OLED_Fill(Black);
+
+    // 1. sor: Datum
+    OLED_SetCursor(0, 0);
+    OLED_WriteString(date_string, Font_11x18, White);
+
+    // 2. sor: Pontos ido
+    OLED_SetCursor(22, 18);
+    OLED_WriteString(time_string, Font_11x18, White);
+
+    // 3. sor: BCD regiszter
+    OLED_SetCursor(0, 36);
+    OLED_WriteString(bcd_string, Font_11x18, White);
+
+    OLED_UpdateScreen();
 }
 
 /**
